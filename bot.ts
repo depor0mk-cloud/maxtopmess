@@ -50,11 +50,25 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
+  // Send initial "thinking" message
+  const statusMsg = await bot.sendMessage(chatId, 'Великий МАХ AI думает...');
+
   try {
     const responseText = await generateWithRetry(text);
-    bot.sendMessage(chatId, responseText);
+    
+    // Delete status message and send final response
+    await bot.deleteMessage(chatId, statusMsg.message_id);
+    await bot.sendMessage(chatId, responseText);
   } catch (error) {
     console.error('API Error Details:', error);
+    
+    // Attempt to delete status message even on error
+    try {
+      await bot.deleteMessage(chatId, statusMsg.message_id);
+    } catch (e) {
+      console.error('Failed to delete status message:', e);
+    }
+    
     bot.sendMessage(chatId, `Связь барахлит. Ошибка: ${error instanceof Error ? error.message : 'неизвестна'}. Ты откуда вещаешь? IP свой не скрываешь?`);
   }
 });
