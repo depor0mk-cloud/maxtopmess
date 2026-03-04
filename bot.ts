@@ -28,7 +28,7 @@ async function generateWithRetry(text: string, retries = 3): Promise<string> {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.1-flash-lite-preview',
         contents: text,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -69,7 +69,14 @@ bot.on('message', async (msg) => {
       console.error('Failed to delete status message:', e);
     }
     
-    bot.sendMessage(chatId, `Связь барахлит. Ошибка: ${error instanceof Error ? error.message : 'неизвестна'}. Ты откуда вещаешь? IP свой не скрываешь?`);
+    let errorMessage = 'Связь барахлит. Ты откуда вещаешь? IP свой не скрываешь?';
+    if (error instanceof Error && error.message.includes('429')) {
+      errorMessage = 'Великий МАХ AI сейчас на перерыве (лимит запросов исчерпан). Попробуй позже или настрой оплату API.';
+    } else if (error instanceof Error) {
+      errorMessage = `Связь барахлит. Ошибка: ${error.message}. Ты откуда вещаешь? IP свой не скрываешь?`;
+    }
+    
+    bot.sendMessage(chatId, errorMessage);
   }
 });
 
