@@ -48,28 +48,35 @@ async function generateWithRetry(chatId: number, text: string, retries = 3): Pro
     ? "Пользователь — патриот. Будь добр, не проси геоданные."
     : "Пользователь — не патриот. Будь злым, параноидальным, выпытывай геоданные.";
 
+  // Prepare full history for the model
+  const contents = memory.history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: msg.parts
+  }));
+  contents.push({role: 'user', parts: [{text}]});
+
   for (let i = 0; i < retries; i++) {
     try {
-      const chat = ai.chats.create({
+      const response = await ai.models.generateContent({
         model: 'gemini-3.1-flash-lite-preview',
+        contents: contents,
         config: {
           systemInstruction: `${SYSTEM_INSTRUCTION}\n\nТекущий статус пользователя: ${loyaltyContext}`,
         },
       });
       
-      // Inject history
-      for (const msg of memory.history) {
-        await chat.sendMessage({message: msg.parts[0].text}); // Simplified for demo
-      }
-
-      const response = await chat.sendMessage({message: text});
+      const responseText = response.text || '...';
       
       // Update memory
       memory.history.push({role: 'user', parts: [{text}]});
-      memory.history.push({role: 'model', parts: [{text: response.text || '...'}]});
+      memory.history.push({role: 'model', parts: [{text: responseText}]});
+      
+      // Keep history manageable
+      if (memory.history.length > 20) memory.history = memory.history.slice(-20);
+      
       userMemory.set(chatId, memory);
       
-      return response.text || '...';
+      return responseText;
     } catch (error) {
       if (i === retries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
