@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import {GoogleGenAI} from '@google/genai';
 import dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
 
@@ -11,6 +12,12 @@ if (!token || !apiKey) {
   console.error('Missing TELEGRAM_BOT_TOKEN or GEMINI_API_KEY');
   process.exit(1);
 }
+
+// HTTP server for Render health check
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => res.send('Bot is running'));
+app.listen(PORT, () => console.log(`Health check server running on port ${PORT}`));
 
 const bot = new TelegramBot(token, {polling: true});
 const ai = new GoogleGenAI({apiKey});
