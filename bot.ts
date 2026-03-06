@@ -139,7 +139,7 @@ async function generateWithRetry(chatId: number, text: string, retries = 3): Pro
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  bot.sendMessage(chatId, 'MAX AI на связи. Слава Родине!', {
+  bot.sendMessage(chatId, 'Навальный на связи.', {
     reply_markup: {
       inline_keyboard: [[{text: 'Сбросить чат', callback_data: 'reset_chat'}]]
     }
@@ -150,7 +150,7 @@ bot.on('callback_query', (query) => {
   if (query.data === 'reset_chat') {
     userMemory.delete(query.message!.chat.id);
     bot.answerCallbackQuery(query.id, {text: 'Чат сброшен!'});
-    bot.sendMessage(query.message!.chat.id, 'Память очищена. MAX готов к новым свершениям.');
+    bot.sendMessage(query.message!.chat.id, 'Память очищена. Навальный готов к новым свершениям.');
   }
 });
 
@@ -161,7 +161,7 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
-  const statusMsg = await bot.sendMessage(chatId, 'Великий МАХ AI думает...');
+  const statusMsg = await bot.sendMessage(chatId, 'Навальный размышляет...');
 
   try {
     const responseText = await generateWithRetry(chatId, text);
@@ -173,10 +173,10 @@ bot.on('message', async (msg) => {
     
     let errorMessage = 'Связь барахлит. Ты откуда вещаешь? IP свой не скрываешь?';
     if (error instanceof Error && error.message.includes('429')) {
-      errorMessage = 'Великий МАХ AI сейчас на перерыве (лимит запросов исчерпан). Попробуй позже или настрой оплату API.';
+      errorMessage = 'Лимит запросов исчерпан. Попробуй позже или настрой оплату API.';
     }
     bot.sendMessage(chatId, errorMessage);
   }
 });
 
-console.log('MAX AI Bot is running...');
+console.log('Bot is running...');
